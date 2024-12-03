@@ -1,14 +1,25 @@
-import express, { Request, Response } from 'express';
+import 'dotenv/config';
+import express from 'express';
 import path from 'path';
+import connectToDatabase from './config/database';
+import userRoutes from './routes/user.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Servir archivos estáticos (como los archivos de la landing page)
+app.use(express.json());  // Para parsear JSON en el body de la solicitud
+
+// Conectar a la base de datos
+connectToDatabase();
+
+// Rutas
+app.use('/api/users', userRoutes);
+
+// Servir archivos estáticos
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Ruta para la landing page
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
