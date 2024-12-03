@@ -18,6 +18,11 @@ app.use('/api/users', userRoutes);
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Asegurarse de que Express pueda manejar las solicitudes que buscan archivos estáticos como CSS, JS, imágenes, etc.
+app.use('/assets', express.static(path.join(__dirname, '../public/assets')));
+app.use('/css', express.static(path.join(__dirname, '../public/css')));
+app.use('/js', express.static(path.join(__dirname, '../public/js')));
+
 // Ruta para la landing page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
