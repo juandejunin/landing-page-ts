@@ -6,6 +6,7 @@ const userService = new UserService();
 export class UserController {
   // Controlador para registrar un nuevo usuario
   async register(req: Request, res: Response) {
+    console.log(req.body)
     const { nombre, email } = req.body;
     try {
       const usuario = await userService.createUser(nombre, email);
