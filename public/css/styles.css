@@ -10974,7 +10974,7 @@ header.masthead h1, header.masthead .h1 {
   height: 100%;
   position: absolute;
   bottom: 0;
-  text-align: center;
+  
   opacity: 0;
   color: #fff;
   background: rgba(244, 98, 58, 0.9);
