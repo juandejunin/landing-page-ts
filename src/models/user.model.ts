@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 // Interfaz para definir las propiedades de un Usuario
 export interface IUser extends Document {
@@ -15,13 +15,13 @@ const usuarioSchema = new Schema<IUser>({
 });
 
 // Modelo de Mongoose
-export const UsuarioModel = mongoose.model<IUser>('Usuario', usuarioSchema);
+export const UsuarioModel = mongoose.model<IUser>("Usuario", usuarioSchema);
 
 // Clase Usuario con métodos y propiedades
 export class Usuario {
   private nombre: string;
   private email: string;
-  private fechaDeRegistro: Date;
+  private readonly fechaDeRegistro: Date;
 
   constructor(nombre: string, email: string) {
     this.nombre = nombre;
@@ -46,8 +46,8 @@ export class Usuario {
       email: this.email,
       fechaDeRegistro: this.fechaDeRegistro,
     });
-    
-    const savedUser = await usuario.save();  // Guarda el usuario y obtiene el _id
+
+    const savedUser = await usuario.save(); // Guarda el usuario y obtiene el _id
 
     // Retorna el documento completo con _id incluido
     return savedUser.toObject();
