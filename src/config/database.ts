@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+// Conexión a la base de datos MongoDB
 const connectToDatabase = async (): Promise<void> => {
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/landingPageDB';
@@ -11,4 +12,14 @@ const connectToDatabase = async (): Promise<void> => {
   }
 };
 
-export default connectToDatabase;
+// Función para desconectar de la base de datos
+const disconnectFromDatabase = async (): Promise<void> => {
+  try {
+    await mongoose.disconnect();
+    console.log('Desconexión exitosa de la base de datos MongoDB');
+  } catch (error) {
+    console.error('Error al desconectar de la base de datos:', error);
+  }
+};
+
+export { connectToDatabase, disconnectFromDatabase };
