@@ -1,4 +1,4 @@
-import { connectToDatabase, disconnectFromDatabase } from '../src/config/database';
+import { connectToDatabase, disconnectFromDatabase } from '../../src/config/database';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
