@@ -4,6 +4,15 @@ export class UserService {
   // Método para crear un nuevo usuario
   async createUser(nombre: string, email: string) {
     try {
+      // Verificar si ya existe un usuario con el mismo correo electrónico
+      const usuarioExistente = await UsuarioModel.findOne({ email });
+      
+      if (usuarioExistente) {
+        // Si el correo ya existe, lanzar un error con un mensaje específico
+        throw new Error('El correo electrónico ya está registrado');
+      }
+
+      // Si no existe, crear un nuevo usuario
       const nuevoUsuario = new UsuarioModel({ nombre, email });
       const usuarioGuardado = await nuevoUsuario.save();
       return usuarioGuardado;

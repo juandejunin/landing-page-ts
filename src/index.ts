@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
-import {connectToDatabase} from './config/database';
+import { connectToDatabase } from './config/database';
 import userRoutes from './routes/user.routes';
 
 const app = express();
@@ -28,7 +28,9 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Iniciar el servidor
-app.listen(PORT, () => {
+// Exportar la app y el servidor para usarlos en pruebas
+const server = app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
+export { app, server }; // Exportar tanto el app como el server
