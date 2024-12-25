@@ -54,7 +54,7 @@ describe('User Routes', () => {
       .send({ nombre: 'Juan', email: 'juan@example.com' });
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Error al guardar el usuario: El correo electrónico ya está registrado');
+    expect(response.body.error).toBe('No se pudo registrar el usuario.');
   });
 
   // Otros casos de prueba...

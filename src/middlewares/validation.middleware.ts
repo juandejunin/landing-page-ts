@@ -1,12 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import validator from 'validator';
-import xss from 'xss';  // Usamos xss para sanitizar entradas
+import xss from 'xss'; // Protección contra XSS
+import _ from 'lodash'; // Manejo seguro de objetos
 
 export const validateUserRegistration = (req: Request, res: Response, next: NextFunction): void => {
-  const { nombre, email } = req.body;
+  const sanitizedBody = _.pick(req.body, ['nombre', 'email']); // Solo permitir las claves esperadas
+  const { nombre, email } = sanitizedBody;
 
   // Validación de nombre
-  const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜ\s]+$/; // Permitir letras acentuadas y espacios
+  const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜ\s]+$/; // Permitir solo letras y espacios
   if (!nombre || nombre.trim().length === 0) {
     res.status(400).json({ error: 'El nombre es obligatorio.' });
     return;
@@ -27,13 +29,14 @@ export const validateUserRegistration = (req: Request, res: Response, next: Next
   }
 
   // Sanitización de entradas: Eliminamos espacios extra y aseguramos que no haya caracteres peligrosos
-  req.body.nombre = validator.escape(nombre.trim());  // Sanitizamos el nombre
-  req.body.email = validator.normalizeEmail(email.trim()); // Normalizamos el correo (elimina posibles inconsistencias)
+  req.body.nombre = validator.escape(nombre.trim()); // Sanitizamos el nombre
 
-  // Protección contra XSS usando xss
-  req.body.nombre = xss(req.body.nombre); // Aplicamos sanitización contra XSS al nombre
-  req.body.email = xss(req.body.email); // Aplicamos sanitización contra XSS al email
+  const normalizedEmail = validator.normalizeEmail(email.trim());
+  if (!normalizedEmail) {
+    res.status(400).json({ error: 'El email no pudo ser normalizado.' });
+    return;
+  }
+  req.body.email = xss(normalizedEmail); 
 
-  // Si las validaciones pasan, continua con la ejecución
   next();
 };
