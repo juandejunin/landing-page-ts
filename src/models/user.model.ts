@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import validator from "validator";
 
 // Interfaz para definir las propiedades de un Usuario
 export interface IUser extends Document {
@@ -8,10 +9,41 @@ export interface IUser extends Document {
 }
 
 // Definimos el esquema para MongoDB
-const usuarioSchema = new Schema<IUser>({
-  nombre: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  fechaDeRegistro: { type: Date, default: Date.now },
+const usuarioSchema = new Schema<IUser>(
+  {
+    nombre: {
+      type: String,
+      required: true,
+      minlength: 2,
+      maxlength: 50,
+      match: /^[a-zA-ZáéíóúÁÉÍÓÚüÜ\s]+$/,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      index: { unique: true, collation: { locale: "en", strength: 2 } },
+      validate: {
+        validator: (value: string) => validator.isEmail(value),
+        message: "El email no es válido.",
+      },
+      minlength: 5,
+      maxlength: 100,
+    },
+    fechaDeRegistro: {
+      type: Date,
+      default: Date.now,
+      immutable: true,
+    },
+  },
+  { strict: true }
+);
+
+// Pre-guardado para sanitizar entradas
+usuarioSchema.pre<IUser>("save", function (next) {
+  this.nombre = validator.escape(this.nombre.trim());
+  this.email = validator.normalizeEmail(this.email.trim()) as string;
+  next();
 });
 
 // Modelo de Mongoose
@@ -29,27 +61,24 @@ export class Usuario {
     this.fechaDeRegistro = new Date();
   }
 
-  // Método para obtener el nombre completo (ejemplo)
   getNombre(): string {
     return this.nombre;
   }
 
-  // Método para establecer un nuevo email
   setEmail(email: string): void {
     this.email = email;
   }
 
-  // Método para obtener los datos del usuario como un objeto, incluyendo _id después de ser guardado
   async toObject(): Promise<IUser> {
-    const usuario = new UsuarioModel({
-      nombre: this.nombre,
-      email: this.email,
-      fechaDeRegistro: this.fechaDeRegistro,
-    });
-
-    const savedUser = await usuario.save(); // Guarda el usuario y obtiene el _id
-
-    // Retorna el documento completo con _id incluido
-    return savedUser.toObject();
+    let usuario = await UsuarioModel.findOne({ email: this.email });
+    if (!usuario) {
+      usuario = new UsuarioModel({
+        nombre: this.nombre,
+        email: this.email,
+        fechaDeRegistro: this.fechaDeRegistro,
+      });
+      await usuario.save();
+    }
+    return usuario.toObject();
   }
 }
