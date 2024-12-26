@@ -23,24 +23,33 @@ El código está organizado siguiendo el paradigma de Programación Orientada a 
 - **UserModel**: Representa el modelo de datos del usuario para la base de datos MongoDB.
 
 ### Estructura de Carpetas
+my-project/
+│
+├── public/                     # Archivos públicos (HTML, CSS, JS)
+│   ├── assets/                 # Archivos de recursos estáticos (imagenes, videos, etc.)
+│   ├── css/                    # Archivos CSS
+│   ├── js/                     # Archivos JS
+│   └── index.html              # Página de inicio
+│
+├── src/                        # Código fuente del back-end
+│   ├── config/                 # Configuración de la base de datos y variables
+│   │   └── database.ts         # Configuración de la base de datos
+│   ├── controllers/            # Controladores para manejar las rutas
+│   │   └── user.controller.ts  # Controlador de usuarios
+│   ├── middlewares/            # Middlewares de validación y sanitización
+│   │   └── validation.middleware.ts  # Validación del registro de usuario
+│   ├── models/                 # Modelos de Mongoose
+│   │   └── user.model.ts       # Modelo de usuario con Mongoose
+│   ├── routes/                 # Rutas del proyecto
+│   │   └── user.routes.ts      # Rutas de usuario (registro, login, etc.)
+│   ├── services/               # Servicios para manejar la lógica de negocio
+│   │   └── user.service.ts     # Lógica de negocio para usuarios
+│   └── index.ts                # Archivo principal para arrancar el servidor
+│
+└── test/                       # Archivos de pruebas
+    ├── user.test.ts            # Pruebas de la lógica de usuario
+    └── ...                     # Otras pruebas
 
-├── controllers/
-│ └── user.controller.ts # Controlador que maneja la lógica de las rutas de usuario
-├── models/
-│ └── user.model.ts # Modelo de usuario en Mongoose
-├── routes/
-│ └── user.routes.ts # Definición de las rutas para los usuarios
-├── services/
-│ └── user.service.ts # Lógica de negocio relacionada con los usuarios
-├── config/
-│ └── database.ts # Configuración de la conexión a la base de datos
-├── public/
-│ └── assets/ # Archivos estáticos (CSS, JS, imágenes)
-├── .env # Variables de entorno
-├── server.ts # Configuración y levantamiento del servidor
-├── tsconfig.json # Configuración de TypeScript
-├── package.json # Dependencias y scripts
-└── README.md # Documentación del proyecto
 
 ## Funcionalidades
 
