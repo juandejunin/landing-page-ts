@@ -98,7 +98,6 @@ describe('UserService', () => {
 
   it('should throw an error if sending the welcome email fails', async () => {
     // Simula que el usuario no existe
-    const newUser = { nombre: 'Test User', email: 'test@example.com' };
     mockFindOne.mockResolvedValueOnce(null);
 
     // Simula que el correo no se puede enviar
