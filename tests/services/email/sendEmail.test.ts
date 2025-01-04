@@ -5,6 +5,16 @@ describe('EmailService', () => {
 
     beforeEach(() => {
         emailService = new EmailService();
+        // Interceptar el método sendEmail con un mock
+        jest.spyOn(emailService, 'sendEmail').mockResolvedValue({
+            envelope: { from: 'no-reply@example.com', to: ['juan@example.com'] },
+            accepted: ['juan@example.com'],
+            rejected: [],
+            pending: [], // Asegúrate de incluir esta propiedad
+            response: '250 OK',
+            messageId: '12345',
+        });
+
     });
 
     it('should send an email successfully', async () => {

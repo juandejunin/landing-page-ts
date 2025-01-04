@@ -30,7 +30,7 @@ export class UserService {
 
       // Crear nuevo usuario
       const nuevoUsuario = new UsuarioModel({ nombre, email });
-      const usuarioGuardado = await nuevoUsuario.save();
+      
 
       // Enviar correo de bienvenida
       await this.emailService.sendEmail(
@@ -38,6 +38,8 @@ export class UserService {
         'Bienvenido a nuestra plataforma',
         `Hola ${nombre}, gracias por registrarte en nuestra plataforma.`
       );
+
+      const usuarioGuardado = await nuevoUsuario.save();
 
       return usuarioGuardado;
     } catch (error: unknown) {

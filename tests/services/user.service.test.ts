@@ -54,20 +54,63 @@ describe('UserService', () => {
     expect(mockSave).toHaveBeenCalled();
   });
 
+
   it('should throw an error if sending the email fails', async () => {
-    const mockEmailError = new Error('Email error');
+    // Preparar el mock para encontrar al usuario como no existente
+    mockFindOne.mockResolvedValue(null); // No existe el usuario
+
+    // Simular un fallo en el envío del correo electrónico
+    mockSendEmail.mockRejectedValue(new Error('Email failed'));
+
+    try {
+      await userService.createUser('Test User', 'test@example.com');
+    } catch (error: unknown) {
+      // Verificar que el error es una instancia de Error antes de acceder a su mensaje
+      if (error instanceof Error) {
+        expect(error.message).toBe('Error al guardar el usuario: Email failed');
+      } else {
+        throw error; // Si no es un error esperado, lo lanzamos de nuevo
+      }
+    }
+
+    // Verificar que el usuario no fue guardado si el email falló
+    expect(mockSave).not.toHaveBeenCalled();
+
+    // Verificar que se intentó buscar al usuario con el email dado
+    expect(mockFindOne).toHaveBeenCalledWith({ email: 'test@example.com' });
+  });
+
+
+
+  it('should throw a generic error message if the email is already registered', async () => {
+    // Simula que el usuario ya existe
+    const existingUser = { nombre: 'Existing User', email: 'test@example.com' };
+    mockFindOne.mockResolvedValueOnce(existingUser);
+
+    await expect(userService.createUser('Test User', 'test@example.com')).rejects.toThrow(
+      'No se pudo registrar el usuario.'
+    );
+
+    // Verifica que save no fue llamado
+    expect(mockSave).not.toHaveBeenCalled();
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it('should throw an error if sending the welcome email fails', async () => {
+    // Simula que el usuario no existe
+    const newUser = { nombre: 'Test User', email: 'test@example.com' };
+    mockFindOne.mockResolvedValueOnce(null);
+
+    // Simula que el correo no se puede enviar
+    const mockEmailError = new Error('Email service failed');
     mockSendEmail.mockRejectedValueOnce(mockEmailError);
 
     await expect(userService.createUser('Test User', 'test@example.com')).rejects.toThrow(
-      'Email error'
+      'Error al guardar el usuario: Email service failed'
     );
 
-    expect(mockFindOne).toHaveBeenCalledWith({ email: 'test@example.com' });
-    expect(mockSave).toHaveBeenCalled();
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      'test@example.com',
-      'Bienvenido a nuestra plataforma',
-      expect.stringContaining('Hola Test User')
-    );
+    // Verifica que no se haya guardado el usuario debido al error en el envío del correo
+    expect(mockSave).not.toHaveBeenCalled();
   });
+
 });
