@@ -3,6 +3,7 @@ import path from 'path';
 import userRoutes from './routes/user.routes';
 
 const app = express();
+app.disable("x-powered-by");
 
 // Middleware global
 app.use(express.json());
