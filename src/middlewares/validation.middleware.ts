@@ -4,7 +4,10 @@ import xss from 'xss'; // Protección contra XSS
 import _ from 'lodash'; // Manejo seguro de objetos
 
 export const validateUserRegistration = (req: Request, res: Response, next: NextFunction): void => {
-  const sanitizedBody = _.pick(req.body, ['nombre', 'email']); // Solo permitir las claves esperadas
+  console.log("Cuerpo recibido en el middleware (antes de filtrar):", req.body); // Inspección inicial
+
+  // Filtrar únicamente las claves esperadas (nombre y email)
+  const sanitizedBody = _.pick(req.body, ['nombre', 'email']);
   const { nombre, email } = sanitizedBody;
 
   // Validación de nombre
@@ -28,15 +31,15 @@ export const validateUserRegistration = (req: Request, res: Response, next: Next
     return;
   }
 
-  // Sanitización de entradas: Eliminamos espacios extra y aseguramos que no haya caracteres peligrosos
-  req.body.nombre = validator.escape(nombre.trim()); // Sanitizamos el nombre
+  // Sanitización de entradas
+  const sanitizedNombre = validator.escape(nombre.trim()); // Eliminar caracteres peligrosos del nombre
+  console.log("este es el sanitizadNombre en el middleware: ", sanitizedNombre)
+  const sanitizedEmail = xss(validator.normalizeEmail(email.trim()) || ''); // Normalizar y proteger email contra XSS
 
-  const normalizedEmail = validator.normalizeEmail(email.trim());
-  if (!normalizedEmail) {
-    res.status(400).json({ error: 'El email no pudo ser normalizado.' });
-    return;
-  }
-  req.body.email = xss(normalizedEmail); 
+  // Asignar los valores sanitizados de vuelta al objeto req.body
+  req.body = { ...sanitizedBody, nombre: sanitizedNombre, email: sanitizedEmail };
+
+  console.log("Cuerpo recibido en el middleware (después de filtrar y sanitizar):", req.body); // Inspección final
 
   next();
 };
