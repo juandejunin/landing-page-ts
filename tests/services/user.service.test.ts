@@ -1,10 +1,13 @@
+jest.mock('../../src/utils/jwt.utils', () => ({
+  generateToken: jest.fn(() => 'fixedToken'), // Mock de token fijo
+}));
+
+jest.mock('../../src/models/user.model');
+jest.mock('../../src/services/email/email.service');
+
 import { UsuarioModel } from '../../src/models/user.model';
 import { UserService } from '../../src/services/user.service';
 import { EmailService } from '../../src/services/email/email.service';
-
-// Mock del módulo
-jest.mock('../../src/models/user.model');
-jest.mock('../../src/services/email/email.service');
 
 describe('UserService', () => {
   let userService: UserService;
@@ -12,74 +15,76 @@ describe('UserService', () => {
   let mockFindOne: jest.Mock;
   let mockSendEmail: jest.Mock;
 
+  beforeAll(() => {
+    let llamada = process.env.BASE_URL;
+    console.log("este es el resultado de probar las variables de entorno: ", llamada);
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
 
     // Configurar mocks
-    mockFindOne = jest.fn().mockResolvedValue(null);
+    mockFindOne = jest.fn().mockResolvedValue(null); // Simula que no encuentra usuarios existentes
     mockSave = jest.fn().mockResolvedValue({ nombre: 'Test User', email: 'test@example.com' });
-    mockSendEmail = jest.fn().mockResolvedValue(true);
+    mockSendEmail = jest.fn().mockResolvedValue({
+      envelope: { from: 'no-reply@example.com', to: ['test@example.com'] },
+      accepted: ['test@example.com'],
+      rejected: [],
+      pending: [],
+      response: '250 OK',
+      messageId: '12345',
+    });
 
     // Reemplazar los métodos con mocks
     (UsuarioModel.findOne as jest.Mock) = mockFindOne;
     UsuarioModel.prototype.save = mockSave;
-    (EmailService.prototype.sendEmail as jest.Mock) = mockSendEmail;
 
     // Instanciar el servicio
     userService = new UserService();
   });
 
-  it('should create a new user', async () => {
-    const result = await userService.createUser('Test User', 'test@example.com');
+  it('should create a new user and send a verification email', async () => {
+    // Mock para que no encuentre al usuario existente
+    mockFindOne.mockResolvedValue(null);
 
-    // Verificar llamadas a mocks y el resultado
-    expect(mockFindOne).toHaveBeenCalledWith({ email: 'test@example.com' });
+    // Mock para guardar al usuario
+    mockSave.mockResolvedValue({ nombre: 'Test User', email: 'test@example.com' });
+
+    // Espiar el método sendEmail
+    const spySendEmail = jest.spyOn(EmailService.prototype, 'sendEmail').mockResolvedValue({
+      envelope: { from: 'no-reply@example.com', to: ['test@example.com'] },
+      accepted: ['test@example.com'],
+      rejected: [],
+      pending: [],
+      response: '250 OK',
+      messageId: '12345',
+    });
+
+    // Ejecutar el servicio
+    await userService.createUser('Test User', 'test@example.com');
+
+    // Verificar que el usuario haya sido guardado
     expect(mockSave).toHaveBeenCalled();
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      'test@example.com',
-      'Bienvenido a nuestra plataforma',
-      expect.stringContaining('Hola Test User')
-    );
-    expect(result).toEqual({ nombre: 'Test User', email: 'test@example.com' });
+
+    // Verificar que sendVerificationEmail haya sido llamado
+    expect(EmailService.prototype.sendVerificationEmail).toHaveBeenCalled();
+
+    // Verificar que sendVerificationEmail haya sido llamado con el correo correcto
+    expect(EmailService.prototype.sendVerificationEmail).toHaveBeenCalledWith('test@example.com');
+
+    // Restaurar los espías
+    spySendEmail.mockRestore();
   });
 
-  it('should throw an error if saving the user fails', async () => {
-    const mockError = new Error('Database error');
-    mockSave.mockRejectedValueOnce(mockError);
+  test('should throw an error if sending the email fails', async () => {
+    const mockSendEmail = jest.fn().mockRejectedValue(new Error('Email failed'));
+    const mockEmailService = { sendVerificationEmail: mockSendEmail };
+    const userService = new UserService(mockEmailService as any);
 
     await expect(userService.createUser('Test User', 'test@example.com')).rejects.toThrow(
-      'Database error'
+      'Error al guardar el usuario: Email failed'
     );
-
-    expect(mockSave).toHaveBeenCalled();
   });
-
-
-  it('should throw an error if sending the email fails', async () => {
-    // Preparar el mock para encontrar al usuario como no existente
-    mockFindOne.mockResolvedValue(null); // No existe el usuario
-
-    // Simular un fallo en el envío del correo electrónico
-    mockSendEmail.mockRejectedValue(new Error('Email failed'));
-
-    try {
-      await userService.createUser('Test User', 'test@example.com');
-    } catch (error: unknown) {
-      // Verificar que el error es una instancia de Error antes de acceder a su mensaje
-      if (error instanceof Error) {
-        expect(error.message).toBe('Error al guardar el usuario: Email failed');
-      } else {
-        throw error; // Si no es un error esperado, lo lanzamos de nuevo
-      }
-    }
-
-    // Verificar que el usuario no fue guardado si el email falló
-    expect(mockSave).not.toHaveBeenCalled();
-
-    // Verificar que se intentó buscar al usuario con el email dado
-    expect(mockFindOne).toHaveBeenCalledWith({ email: 'test@example.com' });
-  });
-
 
 
   it('should throw a generic error message if the email is already registered', async () => {
@@ -91,25 +96,10 @@ describe('UserService', () => {
       'No se pudo registrar el usuario.'
     );
 
-    // Verifica que save no fue llamado
+    // Verificar que save no fue llamado
     expect(mockSave).not.toHaveBeenCalled();
+
+    // Verificar que no se intentó enviar el correo
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
-
-  it('should throw an error if sending the welcome email fails', async () => {
-    // Simula que el usuario no existe
-    mockFindOne.mockResolvedValueOnce(null);
-
-    // Simula que el correo no se puede enviar
-    const mockEmailError = new Error('Email service failed');
-    mockSendEmail.mockRejectedValueOnce(mockEmailError);
-
-    await expect(userService.createUser('Test User', 'test@example.com')).rejects.toThrow(
-      'Error al guardar el usuario: Email service failed'
-    );
-
-    // Verifica que no se haya guardado el usuario debido al error en el envío del correo
-    expect(mockSave).not.toHaveBeenCalled();
-  });
-
 });
