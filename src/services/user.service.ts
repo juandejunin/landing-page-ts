@@ -16,7 +16,7 @@ class DatabaseError extends Error {
 }
 
 export class UserService {
-  constructor(private emailService = new EmailService()) {}
+  constructor(private emailService = new EmailService()) { }
 
   // Método para crear un usuario
   async createUser(nombre: string, email: string) {
@@ -30,14 +30,12 @@ export class UserService {
 
       // Crear nuevo usuario
       const nuevoUsuario = new UsuarioModel({ nombre, email });
-      
-
-      // Enviar correo de bienvenida
-      await this.emailService.sendEmail(
-        email,
-        'Bienvenido a nuestra plataforma',
-        `Hola ${nombre}, gracias por registrarte en nuestra plataforma.`
-      );
+      // Enviar correo de verificación
+      try {
+        await this.emailService.sendVerificationEmail(email);
+      } catch (emailError) {
+        throw new Error('Email failed'); // Lanzar un error claro en caso de fallo
+      }
 
       const usuarioGuardado = await nuevoUsuario.save();
 
@@ -53,15 +51,14 @@ export class UserService {
     }
   }
 
-  // Método para obtener un usuario por su email
-  catch (error: unknown) {
+  catch(error: unknown) {
     if (error instanceof Error) {
       throw new DatabaseError(`Error al obtener el usuario: ${error.message}`);
     } else {
       throw new DatabaseError('Error desconocido al obtener el usuario');
     }
   }
-  
+
 
   // Método para actualizar un usuario
   async updateUser(email: string, nombre: string) {
@@ -82,7 +79,7 @@ export class UserService {
         throw new DatabaseError('Error desconocido al actualizar el usuario');
       }
     }
-    
+
   }
 
   // Método para eliminar un usuario
@@ -103,6 +100,6 @@ export class UserService {
         throw new DatabaseError('Error desconocido al eliminar el usuario');
       }
     }
-    
+
   }
 }

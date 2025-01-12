@@ -1,34 +1,82 @@
 import nodemailer from 'nodemailer';
+import { generateToken } from '../../utils/jwt.utils';
 
 export class EmailService {
   private transporter;
 
   constructor() {
-    // Configuración del transportador para nodemailer
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com', // Usa el host del servicio de correo
-      port: 465, // Puerto para conexiones seguras (SSL/TLS)
-      secure: true, // Habilitamos SSL/TLS para cifrar las comunicaciones
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.EMAIL_USER, // Usuario (correo electrónico)
-        pass: process.env.EMAIL_PASSWORD, // Contraseña
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
       },
     });
   }
 
-  // Función para enviar el correo
-  async sendEmail(to: string, subject: string, text: string) {
+  /**
+   * Envía un correo electrónico genérico.
+   * @param to - Dirección del destinatario.
+   * @param subject - Asunto del correo.
+   * @param body - Contenido del correo.
+   * @returns Información sobre el correo enviado.
+   * @throws Error si ocurre un problema al enviar el correo.
+   */
+  async sendEmail(to: string, subject: string, body: string) {
+    console.log(`Enviando email a ${to} con asunto ${subject} y cuerpo ${body}`);
     try {
       const info = await this.transporter.sendMail({
-        from: `"No-Reply" <${process.env.EMAIL_USER}>`, // Formato del remitente
-        to, // Destinatario
-        subject, // Asunto del correo
-        text, // Cuerpo del correo
+        from: `"No-Reply" <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        text: body,
       });
-      return info; // Regresamos la información del correo enviado
+
+      return info;
     } catch (error) {
       console.error('Error al enviar el correo:', error);
       throw new Error('Error al enviar el correo');
+    }
+  }
+
+  /**
+   * Envía un correo de verificación con un enlace que incluye un token.
+   * @param to - Dirección del destinatario.
+   * @returns Información sobre el correo enviado.
+   */
+  async sendVerificationEmail(to: string) {
+    try {
+      // Generar el token de validación
+      const token = generateToken({ email: to }, '1h');
+
+      // Construir el enlace de validación
+      const verificationLink = `${process.env.BASE_URL}/verify-email?token=${token}`;
+
+      // Construir el mensaje del correo
+      const emailBody = `
+        Hola,
+
+        Para validar tu correo electrónico, haz clic en el siguiente enlace:
+        ${verificationLink}
+
+        Si no solicitaste esto, ignora este mensaje.
+      `;
+
+      // Usar el método genérico para enviar el correo
+      const info = await this.sendEmail(
+        to,
+        'Verifica tu correo electrónico',
+        emailBody
+      );
+
+      console.log("esto es lo que retorna la verificaciond el correo: ", info)
+
+      return info;
+    } catch (error) {
+      console.error('Error al enviar el correo de verificación:', error);
+      throw new Error('Error al enviar el correo de verificación');
     }
   }
 }
