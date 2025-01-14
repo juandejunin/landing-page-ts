@@ -1,5 +1,6 @@
 import { UsuarioModel } from '../models/user.model';
 import { EmailService } from './email/email.service';
+import jwt from "jsonwebtoken";
 
 class ValidationError extends Error {
   constructor(message: string) {
@@ -102,4 +103,41 @@ export class UserService {
     }
 
   }
+
+  // Método para verificar el email del usuario
+  async verifyUserEmail(token: string) {
+    try {
+      const secretKey = process.env.JWT_SECRET_KEY;
+
+      if (!secretKey) {
+        throw new Error("La clave secreta JWT no está configurada.");
+      }
+
+
+      // Decodificar el token para obtener el email
+      const decoded = jwt.verify(token, secretKey) as { email: string };
+
+      const usuario = await UsuarioModel.findOne({ email: decoded.email });
+      if (!usuario) {
+        throw new Error("Usuario no encontrado");
+      }
+
+      // Verificar si ya está verificado
+      if (usuario.isVerified) {
+        return { verificado: true, mensaje: "El usuario ya estaba verificado" };
+      }
+
+      // Actualizar el estado de verificación
+      usuario.isVerified = true;
+      await usuario.save();
+
+      return { verificado: true, mensaje: "Email verificado correctamente" };
+    } catch (error: unknown) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        return { verificado: false, mensaje: "Token inválido o expirado" };
+      }
+      throw error;
+    }
+  }
+
 }

@@ -1,15 +1,23 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 
-const userService = new UserService();
+
 
 export class UserController {
+
+  // Instancia de UserService almacenada en `this`
+  private userService: UserService;
+
+  // Constructor donde inicializamos `userService`
+  constructor() {
+    this.userService = new UserService(); // Instanciamos el servicio una sola vez
+  }
+
   // Controlador para registrar un nuevo usuario
   async register(req: Request, res: Response) {
-    console.log(req.body)
     const { nombre, email } = req.body;
     try {
-      const usuario = await userService.createUser(nombre, email);
+      const usuario = await this.userService.createUser(nombre, email);
       res.status(201).json({ mensaje: 'Usuario registrado correctamente', usuario });
     } catch (error: unknown) {
       // Comprobamos si el error es una instancia de Error
@@ -21,4 +29,31 @@ export class UserController {
       }
     }
   }
+
+  async verifyEmail(req: Request, res: Response): Promise<void> {
+    const { token } = req.query;  // Cambiar a req.query en lugar de req.body
+    if (!token) {
+      res.status(400).json({ error: "Token is required" });
+      return;
+    }
+
+    try {
+      const result = await this.userService.verifyUserEmail(token as string);  // Asegúrate de que el tipo sea string
+      if (result.verificado) {
+        res.status(200).json({ message: "Email verified successfully" });
+        return;
+      } else {
+        res.status(400).json({ message: "Invalid or expired token" });
+        return;
+      }
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      res.status(500).json({ error: "Internal server error" });
+      return;
+    }
+  }
+
+
+
+
 }
