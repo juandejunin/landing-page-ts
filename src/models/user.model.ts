@@ -6,6 +6,7 @@ export interface IUser extends Document {
   nombre: string;
   email: string;
   fechaDeRegistro: Date;
+  isVerified: boolean; // Nuevo campo
 }
 
 // Definimos el esquema para MongoDB
@@ -35,6 +36,10 @@ const usuarioSchema = new Schema<IUser>(
       default: Date.now,
       immutable: true,
     },
+    isVerified: {
+      type: Boolean,
+      default: false, // Por defecto es false
+    },
   },
   { strict: true }
 );
@@ -54,11 +59,13 @@ export class Usuario {
   private nombre: string;
   private email: string;
   private readonly fechaDeRegistro: Date;
+  private isVerified: boolean;
 
   constructor(nombre: string, email: string) {
     this.nombre = nombre;
     this.email = email;
     this.fechaDeRegistro = new Date();
+    this.isVerified = false; // Inicializa como no verificado
   }
 
   getNombre(): string {
@@ -69,6 +76,14 @@ export class Usuario {
     this.email = email;
   }
 
+  setIsVerified(isVerified: boolean): void {
+    this.isVerified = isVerified;
+  }
+
+  getIsVerified(): boolean {
+    return this.isVerified;
+  }
+
   async toObject(): Promise<IUser> {
     let usuario = await UsuarioModel.findOne({ email: this.email });
     if (!usuario) {
@@ -76,6 +91,7 @@ export class Usuario {
         nombre: this.nombre,
         email: this.email,
         fechaDeRegistro: this.fechaDeRegistro,
+        isVerified: this.isVerified,
       });
       await usuario.save();
     }

@@ -25,7 +25,6 @@ export class EmailService {
    * @throws Error si ocurre un problema al enviar el correo.
    */
   async sendEmail(to: string, subject: string, body: string) {
-    console.log(`Enviando email a ${to} con asunto ${subject} y cuerpo ${body}`);
     try {
       const info = await this.transporter.sendMail({
         from: `"No-Reply" <${process.env.EMAIL_USER}>`,
@@ -52,7 +51,7 @@ export class EmailService {
       const token = generateToken({ email: to }, '1h');
 
       // Construir el enlace de validación
-      const verificationLink = `${process.env.BASE_URL}/verify-email?token=${token}`;
+      const verificationLink = `${process.env.BASE_URL}/api/users/verify-email?token=${token}`;
 
       // Construir el mensaje del correo
       const emailBody = `
@@ -70,8 +69,6 @@ export class EmailService {
         'Verifica tu correo electrónico',
         emailBody
       );
-
-      console.log("esto es lo que retorna la verificaciond el correo: ", info)
 
       return info;
     } catch (error) {
