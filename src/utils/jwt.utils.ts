@@ -1,6 +1,10 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY!;
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
+
+if (!JWT_SECRET_KEY) {
+  throw new Error('La clave secreta JWT no está definida en las variables de entorno.');
+}
 
 /**
  * Genera un token JWT.
@@ -14,10 +18,6 @@ export const generateToken = (
   expiresIn: string = '1h',
   options: SignOptions = {}
 ): string => {
-  if (!JWT_SECRET_KEY) {
-    throw new Error('La clave secreta JWT no está definida en las variables de entorno.');
-  }
-
   return jwt.sign(payload, JWT_SECRET_KEY, { expiresIn, ...options });
 };
 
