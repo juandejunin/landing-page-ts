@@ -1,6 +1,11 @@
 
 import { EmailService } from '../../../src/services/email/email.service';
 
+// Mock de jsonwebtoken
+jest.mock('jsonwebtoken', () => ({
+  sign: jest.fn(() => 'mockedToken'), // Devuelve siempre el mismo token
+}));
+
 describe('EmailService - Correo de verificación', () => {
   let emailService: EmailService;
 
@@ -16,6 +21,55 @@ describe('EmailService - Correo de verificación', () => {
       response: '250 OK',
       messageId: '12345',
     });
+
+  });
+
+  it('should handle errors when sending an email fails', async () => {
+    // Simular un error al enviar el correo
+    const mockError = new Error('Error al enviar el correo de verificación');
+    jest.spyOn(emailService, 'sendEmail').mockRejectedValue(mockError);
+  
+    try {
+      // Intentar enviar un correo
+      await emailService.sendVerificationEmail('user@example.com');
+      // Si no lanza un error, forzamos fallo en la prueba
+      fail('Se esperaba que lanzara un error, pero no lo hizo');
+    } catch (error: unknown) {
+      // Asegurarse de que el error sea una instancia de Error
+      if (error instanceof Error) {
+        // Validar que el error sea el esperado
+        expect(error.message).toBe(mockError.message);
+      } else {
+        // Si el error no es una instancia de Error, forzamos fallo
+        fail('El error no es una instancia de Error');
+      }
+    }
+  
+    // Verificar que el método `sendEmail` fue llamado con los parámetros correctos
+    expect(emailService.sendEmail).toHaveBeenCalledWith(
+      'user@example.com',
+      'Verifica tu correo electrónico',
+      expect.stringContaining('http://localhost:3000/api/users/verify-email?token='), // Asegura que contiene el enlace
+    );
+  });
+  
+  
+
+  it('should generate the correct verification link', async () => {
+    const baseUrl = 'http://localhost:3000';
+    process.env.BASE_URL = baseUrl;
+
+    // Ejecuta la función que envía el correo
+    await emailService.sendVerificationEmail('user@example.com');
+
+    // Verifica que el cuerpo del correo sea el esperado
+    const expectedLink = `${baseUrl}/api/users/verify-email?token=mockedToken`;
+    expect(emailService.sendEmail).toHaveBeenCalledWith(
+      'user@example.com',
+      'Verifica tu correo electrónico',
+      expect.stringContaining(expectedLink) // Verifica que el enlace esté incluido.
+    );
+
   });
 
   it('should send a verification email successfully', async () => {

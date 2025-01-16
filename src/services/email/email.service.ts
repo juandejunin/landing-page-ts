@@ -55,13 +55,14 @@ export class EmailService {
 
       // Construir el mensaje del correo
       const emailBody = `
-        Hola,
+      Hola,
+    
+      Para validar tu correo electrónico, haz clic en el siguiente enlace:
+      ${verificationLink}
+    
+      Si no solicitaste esto, ignora este mensaje.
+    `.trim();
 
-        Para validar tu correo electrónico, haz clic en el siguiente enlace:
-        ${verificationLink}
-
-        Si no solicitaste esto, ignora este mensaje.
-      `;
 
       // Usar el método genérico para enviar el correo
       const info = await this.sendEmail(
