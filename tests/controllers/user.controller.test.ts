@@ -1,9 +1,11 @@
 import { UserController } from '../../src/controllers/user.controller';
 import { UserService } from '../../src/services/user.service';
 import { Request, Response } from 'express';
+import { verifyToken, generateToken } from '../../src/utils/jwt.utils';
 
-// Mock del servicio
-jest.mock('../../src/services/user.service'); 
+// Mock del servicio y las utilidades
+jest.mock('../../src/services/user.service');
+jest.mock('../../src/utils/jwt.utils');
 
 describe('UserController', () => {
   let userController: UserController;
@@ -55,4 +57,6 @@ describe('UserController', () => {
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Error en el servicio' });
   });
+
 });
+

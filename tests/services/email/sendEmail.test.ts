@@ -12,6 +12,8 @@ describe('EmailService - Correo de verificación', () => {
   beforeEach(() => {
     emailService = new EmailService();
 
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
     // Interceptar el método sendEmail con un mock por defecto
     jest.spyOn(emailService, 'sendEmail').mockResolvedValue({
       envelope: { from: 'no-reply@example.com', to: ['juan@example.com'] },
@@ -23,6 +25,25 @@ describe('EmailService - Correo de verificación', () => {
     });
 
   });
+
+  
+
+  it('should include the correct token in the verification email', async () => {
+  // Mock explícito de token generado
+  const expectedToken = 'mockedToken';
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+
+  // Ejecutar el método
+  await emailService.sendVerificationEmail('user@example.com');
+
+  // Verificar que el token se incluye correctamente en el enlace
+  expect(emailService.sendEmail).toHaveBeenCalledWith(
+    'user@example.com',
+    'Verifica tu correo electrónico',
+    expect.stringContaining(`${baseUrl}/api/users/verify-email?token=${expectedToken}`)
+  );
+});
+
 
   it('should handle errors when sending an email fails', async () => {
     // Simular un error al enviar el correo
@@ -129,4 +150,5 @@ describe('EmailService - Correo de verificación', () => {
       'Por favor verifica tu correo electrónico'
     );
   });
+  
 });
