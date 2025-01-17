@@ -30,28 +30,56 @@ export class UserController {
     }
   }
 
+  // async verifyEmail(req: Request, res: Response): Promise<void> {
+  //   const { token } = req.query;  // Cambiar a req.query en lugar de req.body
+  //   if (!token) {
+  //     res.status(400).json({ error: "Token is required" });
+  //     return;
+  //   }
+
+  //   try {
+  //     const result = await this.userService.verifyUserEmail(token as string);  // Asegúrate de que el tipo sea string
+  //     if (result.verificado) {
+  //       res.status(200).json({ message: "Email verified successfully" });
+  //       return;
+  //     } else {
+  //       res.status(400).json({ message: "Invalid or expired token" });
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     console.error("Error verifying email:", error);
+  //     res.status(500).json({ error: "Internal server error" });
+  //     return;
+  //   }
+  // }
+
   async verifyEmail(req: Request, res: Response): Promise<void> {
-    const { token } = req.query;  // Cambiar a req.query en lugar de req.body
+    const { token } = req.query;
     if (!token) {
       res.status(400).json({ error: "Token is required" });
       return;
     }
-
+  
     try {
-      const result = await this.userService.verifyUserEmail(token as string);  // Asegúrate de que el tipo sea string
+      const result = await this.userService.verifyUserEmail(token as string);
       if (result.verificado) {
         res.status(200).json({ message: "Email verified successfully" });
-        return;
       } else {
         res.status(400).json({ message: "Invalid or expired token" });
-        return;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error verifying email:", error);
-      res.status(500).json({ error: "Internal server error" });
-      return;
+      if (error instanceof Error) {
+        if (error.message === 'Error generando el token') {
+          res.status(500).json({ error: 'Error generando el token' });
+        } else {
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      }
+     
     }
   }
+  
 
 
 

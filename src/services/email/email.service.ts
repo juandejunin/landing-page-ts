@@ -45,36 +45,31 @@ export class EmailService {
    * @param to - Dirección del destinatario.
    * @returns Información sobre el correo enviado.
    */
+
   async sendVerificationEmail(to: string) {
     try {
-      // Generar el token de validación
       const token = generateToken({ email: to }, '1h');
-
-      // Construir el enlace de validación
       const verificationLink = `${process.env.BASE_URL}/api/users/verify-email?token=${token}`;
-
-      // Construir el mensaje del correo
       const emailBody = `
-      Hola,
-    
-      Para validar tu correo electrónico, haz clic en el siguiente enlace:
-      ${verificationLink}
-    
-      Si no solicitaste esto, ignora este mensaje.
-    `.trim();
+        Hola,
+        Para validar tu correo electrónico, haz clic en el siguiente enlace:
+        ${verificationLink}
+        Si no solicitaste esto, ignora este mensaje.
+      `.trim();
 
+      return await this.sendEmail(to, 'Verifica tu correo electrónico', emailBody);
+    } catch (error: unknown) {
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
 
-      // Usar el método genérico para enviar el correo
-      const info = await this.sendEmail(
-        to,
-        'Verifica tu correo electrónico',
-        emailBody
-      );
-
-      return info;
-    } catch (error) {
-      console.error('Error al enviar el correo de verificación:', error);
+      if (error instanceof Error) {
+        // Ahora podemos acceder a `error.message` de forma segura
+        if (error.message.includes('jwt')) {
+          throw new Error('Error generando el token');
+        }
+      }
       throw new Error('Error al enviar el correo de verificación');
     }
   }
+
+
 }
