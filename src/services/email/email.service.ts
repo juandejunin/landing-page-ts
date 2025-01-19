@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer';
 import { generateToken } from '../../utils/jwt.utils';
+import path from 'path';
+import fs from 'fs';
 
 export class EmailService {
   private transporter;
@@ -68,6 +70,37 @@ export class EmailService {
         }
       }
       throw new Error('Error al enviar el correo de verificación');
+    }
+  }
+
+  /**
+   * Envía un correo con un archivo adjunto.
+   * @param to - Dirección del destinatario.
+   * @param subject - Asunto del correo.
+   * @param body - Contenido del correo.
+   * @param filePath - Ruta al archivo que se enviará como adjunto.
+   */
+  async sendEmailWithAttachment(to: string, subject: string, body: string, filePath: string) {
+    try {
+      const fileContent = fs.createReadStream(filePath);
+
+      const info = await this.transporter.sendMail({
+        from: `"No-Reply" <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        text: body,
+        attachments: [
+          {
+            filename: path.basename(filePath),
+            content: fileContent,
+          },
+        ],
+      });
+
+      return info;
+    } catch (error) {
+      console.error('Error al enviar el correo con adjunto:', error);
+      throw new Error('Error al enviar el correo con adjunto');
     }
   }
 
