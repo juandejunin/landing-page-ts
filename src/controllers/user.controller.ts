@@ -30,58 +30,52 @@ export class UserController {
     }
   }
 
-  // async verifyEmail(req: Request, res: Response): Promise<void> {
-  //   const { token } = req.query;  // Cambiar a req.query en lugar de req.body
-  //   if (!token) {
-  //     res.status(400).json({ error: "Token is required" });
-  //     return;
-  //   }
-
-  //   try {
-  //     const result = await this.userService.verifyUserEmail(token as string);  // Asegúrate de que el tipo sea string
-  //     if (result.verificado) {
-  //       res.status(200).json({ message: "Email verified successfully" });
-  //       return;
-  //     } else {
-  //       res.status(400).json({ message: "Invalid or expired token" });
-  //       return;
-  //     }
-  //   } catch (error) {
-  //     console.error("Error verifying email:", error);
-  //     res.status(500).json({ error: "Internal server error" });
-  //     return;
-  //   }
-  // }
-
-  async verifyEmail(req: Request, res: Response): Promise<void> {
+   async verifyEmail(req: Request, res: Response): Promise<void> {
     const { token } = req.query;
+
     if (!token) {
-      res.status(400).json({ error: "Token is required" });
+      res.status(400).json({
+        redirect: "/error.html",
+        message: "Token is required"
+      });
       return;
     }
-  
+
     try {
       const result = await this.userService.verifyUserEmail(token as string);
+
       if (result.verificado) {
-        res.status(200).json({ message: "Email verified successfully" });
+        res.status(200).json({
+          redirect: "/success.html",
+          message: "Email verified successfully"
+        });
       } else {
-        res.status(400).json({ message: "Invalid or expired token" });
+        res.status(400).json({
+          redirect: "/error.html",
+          message: "Invalid or expired token"
+        });
       }
     } catch (error: unknown) {
       console.error("Error verifying email:", error);
+
       if (error instanceof Error) {
         if (error.message === 'Error generando el token') {
-          res.status(500).json({ error: 'Error generando el token' });
+          res.status(500).json({
+            error: 'Error generando el token',
+            redirect: "/error.html"
+          });
         } else {
-          res.status(500).json({ error: 'Internal server error' });
+          res.status(500).json({
+            error: 'Internal server error',
+            redirect: "/error.html"
+          });
         }
+      } else {
+        res.status(500).json({
+          error: 'Unknown error occurred',
+          redirect: "/error.html"
+        });
       }
-     
     }
   }
-  
-
-
-
-
 }
