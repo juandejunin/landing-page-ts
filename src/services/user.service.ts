@@ -18,7 +18,7 @@ class DatabaseError extends Error {
 }
 
 export class UserService {
-  constructor(private emailService = new EmailService()) {}
+  constructor(private emailService = new EmailService()) { }
 
   // Método para manejar solicitudes de usuario
   async processUserRequest(nombre: string, email: string) {
@@ -46,8 +46,16 @@ export class UserService {
 
       // Caso 3: Usuario no existe, crear nuevo usuario y enviar correo de verificación
       const nuevoUsuario = new UsuarioModel({ nombre, email });
-      await nuevoUsuario.save();
-      await this.emailService.sendVerificationEmail(email);
+      try {
+        await nuevoUsuario.save(); // Guardar el usuario
+        await this.emailService.sendVerificationEmail(email); // Enviar correo
+      } catch (error) {
+        // Si el envío de correo falla, eliminamos el usuario creado
+        if (nuevoUsuario._id) {
+          await UsuarioModel.findByIdAndDelete(nuevoUsuario._id);
+        }
+        throw error; // Repropagar el error
+      }
 
       return { mensaje: 'Usuario registrado y correo de verificación enviado' };
     } catch (error: unknown) {
@@ -132,7 +140,7 @@ export class UserService {
       // Actualizar el estado de verificación
       usuario.isVerified = true;
       await usuario.save();
-      
+
       const filePath = path.join(__dirname, '../files/archivo.pdf'); // Ruta al archivo PDF
 
       await this.emailService.sendEmailWithAttachment(
