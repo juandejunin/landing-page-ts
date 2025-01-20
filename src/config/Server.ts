@@ -2,6 +2,8 @@ import express, { Application } from 'express';
 import userRoutes from '../routes/user.routes'
 import path from 'path';
 import { connectToDatabase } from './database';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpecs from './swagger.config'; // Importa la configuración de Swagger
 
 class Server {
 
@@ -14,6 +16,7 @@ class Server {
 
         this.middlewares();
         this.routes(); // Configuración de rutas
+        this.setupSwagger(); // Configuración de Swagger
     }
 
     // Getter para acceder a 'app' de manera pública
@@ -33,6 +36,11 @@ class Server {
 
     }
 
+    private setupSwagger() {
+        // Middleware para Swagger
+        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+      }
+
     public async listen() {
         // Intentamos conectar a la base de datos antes de iniciar el servidor
         await connectToDatabase();
@@ -40,6 +48,7 @@ class Server {
         // Levantamos el servidor
         this.app.listen(this.port, () => {
             console.log(`Servidor corriendo en el puerto: ${this.port}`);
+            console.log(`Documentación disponible en http://localhost:${this.port}/api-docs`);
         });
     }
 

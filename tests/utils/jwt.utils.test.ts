@@ -31,16 +31,4 @@ describe('generateToken', () => {
             .toThrow('Error desconocido al generar el token.');
     });
 
-    //   it('should generate a token when everything is correct', () => {
-    //     const validPayload = { email: 'test@example.com' };
-
-    //     // Mock de jwt.sign para simular una respuesta exitosa
-    //     jest.spyOn(jwt, 'sign').mockReturnValue('mocked_token' as string);
-
-    //     // Comprobamos que el token generado sea el esperado
-    //     const token = generateToken(validPayload);
-    //     expect(token).toBe('mocked_token');
-    //   });
-
-
 });
